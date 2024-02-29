@@ -1,35 +1,31 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { createClient } from "@supabase/supabase-js";
+import { Configuration, OpenAIApi } from "openai";
 
-function App() {
-  const [count, setCount] = useState(0)
+const supabaseClient = createClient("https://mnwtchciiuyswkitrcwd.supabase.co", "")
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+async function generateEmbeddings() {
+    const configuration = new Configuration({ apiKey: "" })
+    const ai = new OpenAIApi(configuration);
+    const documents = [
+        "Peppa pig is a popular show",
+        "peppa pig likes carrotes",
+        "Peppa Pig is british"
+    ];
+
+    for (const document of documents) {
+        const input = document.replace(/\n/g,'');
+
+        const embeddingResponse = await ai.createEmbedding({
+            model: "text-embedding-ada-002",
+            input
+        });
+
+        const [{ embedding }] = embeddingResponse.data.data;
+
+        await supabaseClient.from('documents').insert({
+            content: document,
+            embedding
+        });
+    }
 }
-
-export default App
